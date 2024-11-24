@@ -1,6 +1,3 @@
-# Install required libraries
-# pip install biopython sentence-transformers faiss-cpu requests beautifulsoup4 transformers
-
 import re
 import json
 import requests
@@ -81,31 +78,13 @@ def build_search_engine(corpus, embedding_model_name="all-MiniLM-L6-v2"):
     faiss.write_index(index, 'drug_corpus.index')
     return index, embedding_model
 
-# ---- STEP 4: INTEGRATE WITH RAG ---- #
+# Save the cleaned corpus to a JSON file
+def save_corpus(corpus, file_path="drug_corpus.json"):
+    print(f"Saving corpus to {file_path}...")
+    with open(file_path, 'w') as f:
+        json.dump(corpus, f)
 
-def search(query, index, corpus, embedding_model, k=5):
-    query_embedding = embedding_model.encode([query])
-    distances, indices = index.search(np.array(query_embedding), k)
-    return [corpus[i] for i in indices[0]]
-
-def generate_response(context, question, model_name="meta-llama/Llama-3.2-1B"):
-    print("Generating response using LLM...")
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
-    model = AutoModelForCausalLM.from_pretrained(model_name)
-
-    input_text = f"Context: {context}\nQuestion: {question}\nAnswer:"
-    inputs = tokenizer(input_text, return_tensors="pt")
-    outputs = model.generate(**inputs, max_length=150)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
-
-def rag_system(query, index, corpus, embedding_model, model_name="meta-llama/Llama-3.2-1B"):
-    retrieved_docs = search(query, index, corpus, embedding_model)
-    combined_context = "\n".join(retrieved_docs)
-    response = generate_response(combined_context, query, model_name)
-    return response
-
-# ---- MAIN SCRIPT ---- #
-
+# Main script section
 if __name__ == "__main__":
     print("Creating corpus...")
     raw_corpus = create_corpus()
@@ -113,11 +92,9 @@ if __name__ == "__main__":
     print("Cleaning and preprocessing corpus...")
     cleaned_corpus = preprocess_corpus(raw_corpus)
 
+    # Save the corpus
+    save_corpus(cleaned_corpus)
+
     print("Building dense search engine...")
     faiss_index, embed_model = build_search_engine(cleaned_corpus)
-
-    print("Testing RAG system...")
-    test_query = input()
-    answer = rag_system(test_query, faiss_index, cleaned_corpus, embed_model)
-    print(f"Answer: {answer}")
 
