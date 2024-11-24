@@ -208,7 +208,7 @@ def generate_response(context, question, model_name="meta-llama/Llama-3.2-1B"):
         print(f"Error in response generation: {e}")
         return "Unable to generate response due to an error."
 class MoleculeGenerator:
-    def __init__(self, model_name="deepchem/chemformer"):
+    def __init__(self, model_name="ncfrey/ChemGPT-19M"):
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(model_name)
         if torch.cuda.is_available():
